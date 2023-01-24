@@ -1,0 +1,14 @@
+[package]
+name = "mewhen-cat"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.66"
+hidapi = { version = "1.2", default-features = false, features = ["linux-static-hidraw"] }
+joycon = { git = "https://github.com/Yamakaky/joy", version = "0.1.0" }
+joycon-sys = { git = "https://github.com/Yamakaky/joy", version = "0.1.0" }
+rdev = "0.5.2"
+uinput = "0.1.3"
