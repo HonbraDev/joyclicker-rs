@@ -60,6 +60,7 @@ impl DeviceController {
     {
         self.rodent.send(btn, 1)?;
         self.rodent.synchronize()?;
+
         Ok(())
     }
 
@@ -69,6 +70,7 @@ impl DeviceController {
     {
         self.rodent.send(btn, 0)?;
         self.rodent.synchronize()?;
+
         Ok(())
     }
 
@@ -87,7 +89,8 @@ impl DeviceController {
     }
 
     pub fn run(mut self) -> JoinHandle<Result<()>> {
-        println!("Running device: {:?}", self.joycon.get_dev_info().unwrap());
+        self.log("starting thread...");
+
         thread::spawn(move || loop {
             let report = self.joycon.tick().context("failed to get report")?;
             self.on_report(report).context("failed to process report")?;
