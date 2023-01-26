@@ -4,12 +4,19 @@ use hidapi::HidApi;
 use joycon::JoyCon;
 use joycon_sys::{HID_IDS, NINTENDO_VENDOR_ID};
 
+mod buttons;
 mod device_controller;
 mod security_nightmare;
-mod buttons;
 
 fn main() -> Result<()> {
-    let handles = get_devices()?
+    let devices = get_devices()?;
+
+    if devices.is_empty() {
+        println!("No devices found");
+        return Ok(());
+    }
+
+    let handles = devices
         .into_iter()
         .map(|device| device.run())
         .collect::<Vec<_>>();

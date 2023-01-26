@@ -2,22 +2,22 @@ use anyhow::{bail as yeet, Context, Result};
 use joycon::{JoyCon, Report};
 use joycon_sys::input::WhichController;
 use std::thread::{self, JoinHandle};
-use uinput::event::keyboard::Key;
+use uinput::{event::keyboard::Key, Device as UinputDevice, Event as UinputEvent};
 
 use crate::{
     buttons::{get_button_events, Button, ButtonAction},
-    security_nightmare,
+    security_nightmare::make_rodent,
 };
 
 pub struct DeviceController {
     name: String,
     joycon: JoyCon,
+    rodent: UinputDevice,
     previous_report: Option<Report>,
-    rodent: uinput::Device,
 }
 
 impl DeviceController {
-    fn on_report(&mut self, report: Report) -> anyhow::Result<()> {
+    fn on_report(&mut self, report: Report) -> Result<()> {
         if let Some(previous_report) = &self.previous_report {
             let events = get_button_events(&previous_report.buttons, &report.buttons);
 
@@ -46,7 +46,7 @@ impl DeviceController {
 
     fn press_or_release_event<T>(&mut self, btn: T, action: &ButtonAction) -> Result<()>
     where
-        T: Into<uinput::Event>,
+        T: Into<UinputEvent>,
     {
         match action {
             ButtonAction::Press => self.press_btn(btn),
@@ -56,7 +56,7 @@ impl DeviceController {
 
     fn press_btn<T>(&mut self, btn: T) -> Result<()>
     where
-        T: Into<uinput::Event>,
+        T: Into<UinputEvent>,
     {
         self.rodent.send(btn, 1)?;
         self.rodent.synchronize()?;
@@ -66,7 +66,7 @@ impl DeviceController {
 
     fn release_btn<T>(&mut self, btn: T) -> Result<()>
     where
-        T: Into<uinput::Event>,
+        T: Into<UinputEvent>,
     {
         self.rodent.send(btn, 0)?;
         self.rodent.synchronize()?;
@@ -77,8 +77,7 @@ impl DeviceController {
     pub fn new(mut joycon: JoyCon) -> Result<Self> {
         let name = get_joycon_name(&mut joycon)?;
 
-        let rodent =
-            security_nightmare::make_rodent(&name).context("failed to create uinput device")?;
+        let rodent = make_rodent(&name).context("failed to create uinput device")?;
 
         Ok(Self {
             name: name.to_string(),
@@ -118,7 +117,7 @@ fn get_joycon_name(joycon: &mut JoyCon) -> Result<String> {
     Ok(name)
 }
 
-fn get_uinput_event_from_button(button: &Button) -> Option<uinput::Event> {
+fn get_uinput_event_from_button(button: &Button) -> Option<UinputEvent> {
     match button {
         Button::A => Some(Key::Right),
         Button::Right => Some(Key::Right),
